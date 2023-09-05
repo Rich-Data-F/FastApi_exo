@@ -1,0 +1,7 @@
+requests: latest
+fastapi: latest
+fastapi-middleware: latest
+uvicorn: latest
+pydantic: latest
+typing: latest
+enum: latest
