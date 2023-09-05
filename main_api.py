@@ -8,9 +8,10 @@ from pydantic import BaseModel, Field
 import csv
 import random
 from typing import Optional, List
-import Backup.csvreview as csvreview
+import csvreview as csvreview
 import html
 from enum import Enum
+import csvreview
 
 app = FastAPI(
     title="API pour la base de questions",
@@ -18,7 +19,13 @@ app = FastAPI(
     version="1.0",
     debug=True)
 
-local_csv_path = "/root/Coding/FastAPI/Eval/Data/questions.csv"
+path_to_csv_filename = os.path.join(os.path.dirname(os.path.dirname(__file__)),'Data/questions.csv')
+#path_to_csv_filename = os.path.join(os.path.dirname(__file__),'/Data/questions.csv')
+local_csv_path=path_to_csv_filename
+#local_csv_path = "/root/Coding/FastAPI/Eval/Data/questions.csv"
+#/root/Coding/FastAPI/Eval/main_api.py
+print(path_to_csv_filename)
+
 #Import du csv d'origine
 def is_csv_empty(file_path):
     return os.path.exists(file_path) and os.path.getsize(file_path) == 0
@@ -37,7 +44,7 @@ if is_csv_empty(local_csv_path):
     download_csv_from_url(replacement_csv_url, local_csv_path)
 else:
     print("Local CSV file is not empty, no replacement needed.")
-    df=pd.read_csv('/root/Coding/FastAPI/Eval/Data/questions.csv')
+    df=pd.read_csv(local_csv_path)
     df.head()
 
 list_use=csvreview.list_use
@@ -79,7 +86,7 @@ async def authentification(username: str = Header(None), password: str = Header(
     ''' vérifie que l'utilisateur est enregistré te correctement identifié'''
     if username in USERS and USERS[username] == password:
         return username
-    raise HTTPException(status_code=401, detail="Utilisateur ne faisant pas partie des utilisateurs enregistrés, ou identifiants incorrects, merci de contacter l'administrateur")
+    raise HTTPException(status_code=401, detail="Utilisateur ne faisant pas partie des ceux enregistrés, ou identifiants incorrects, merci de contacter l'administrateur")
 
 async def is_valid_answer_format(correct_answer: str) -> bool:
     ''' vérifie que la réponse correcte est bien parmi les 4 possibilités.'''
@@ -122,9 +129,11 @@ async def check_use(use:str):
     else:
         print("Accepted: Use validé")
 
+
 async def load_questions_from_csv():
     ''' récupère le csv questions dans le répertoire Data'''
-    with open("/root/Coding/FastAPI/Eval/Data/questions.csv", "r") as f:
+#    with open("/root/Coding/FastAPI/Eval/Data/questions.csv", "r") as f:
+    with open(local_csv_path, "r") as f:
         reader = csv.DictReader(f, delimiter=",")
         questions = list(reader)
     return questions
@@ -154,7 +163,7 @@ async def get_questions(
 async def save_questions_to_csv(questions):
     '''Ajoute une nouvelle question au csv questions existant.'''
     fieldnames = questions[0].keys()
-    async with aiofiles.open("/root/Coding/FastAPI/Eval/Data/questions.csv", "w", newline='') as csv_file:
+    async with aiofiles.open(local_csv_path, "w", newline='') as csv_file:
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         csv_writer.writeheader()
         for row in questions:
@@ -195,7 +204,7 @@ async def create_question(
         raise HTTPException(status_code=400, detail="Format de la question incorrecte")
     await check_use(use)
     await check_subject(subject)
-    questions = await load_questions_from_csv()
+    await load_questions_from_csv()
     new_question={
         "question":question,
         'subject':subject,
