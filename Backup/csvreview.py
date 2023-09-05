@@ -1,0 +1,11 @@
+import pandas as pd
+df=pd.read_csv('https://dst-de.s3.eu-west-3.amazonaws.com/fastapi_fr/questions.csv')
+df.head()
+list_subject=df.subject.unique()
+print(list_subject)
+df.subject.value_counts()
+list_use=df.use.unique()
+print(list_use)
+df.use.value_counts()
+df.responseD.value_counts()
+df.remark.value_counts()
